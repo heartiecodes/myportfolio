@@ -2,14 +2,29 @@ import { useState } from "react";
 import { Mail, Linkedin, Github, Send } from "lucide-react";
 
 const ContactSection = () => {
-  const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [sent, setSent] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSent(true);
-    setTimeout(() => setSent(false), 3000);
-    setForm({ name: "", email: "", message: "" });
+    const formElement = e.currentTarget;
+    const data = new FormData(formElement);
+
+    try {
+      const res = await fetch("https://formspree.io/f/xnjbkogw", {
+        method: "POST",
+        body: data,
+        headers: { Accept: "application/json" },
+      });
+      if (res.ok) {
+        setSent(true);
+        setTimeout(() => setSent(false), 3000);
+        formElement.reset();
+      } else {
+        console.error("Formspree error", await res.text());
+      }
+    } catch (err) {
+      console.error("Submission failed", err);
+    }
   };
 
   return (
@@ -74,10 +89,9 @@ const ContactSection = () => {
               </label>
               <input
                 id="name"
+                name="name"
                 type="text"
                 required
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
                 className="w-full rounded-md border border-border bg-secondary px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Your name"
               />
@@ -88,10 +102,9 @@ const ContactSection = () => {
               </label>
               <input
                 id="email"
+                name="email"
                 type="email"
                 required
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
                 className="w-full rounded-md border border-border bg-secondary px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="you@email.com"
               />
@@ -102,10 +115,9 @@ const ContactSection = () => {
               </label>
               <textarea
                 id="message"
+                name="message"
                 required
                 rows={4}
-                value={form.message}
-                onChange={(e) => setForm({ ...form, message: e.target.value })}
                 className="w-full rounded-md border border-border bg-secondary px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                 placeholder="Your message..."
               />
@@ -118,7 +130,7 @@ const ContactSection = () => {
             </button>
             {sent && (
               <p className="text-sm text-accent animate-fade-in">
-                ✓ Message sent! (demo only)
+                ✓ Message sent! Thank you.
               </p>
             )}
           </form>
